@@ -1,0 +1,24 @@
+version: "3"
+
+services:
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: mlenv
+    privileged: true
+    command: /sbin/init
+    runtime: nvidia
+    environment:
+      - NVIDIA_VISIBLE_DEVICES=all
+      - NVIDIA_DRIVER_CAPABILITIES=all
+    volumes:
+      - /data:/data
+      - ~/.ssh/docker_rsa.pub:/root/.ssh/authorized_keys
+    working_dir: /root
+    expose:
+      - 22
+    ports:
+      - '2222:22'
+    tty: true
+
