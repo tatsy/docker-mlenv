@@ -74,6 +74,3 @@ RUN git clone https://github.com/zplug/zplug $ZPLUG_HOME
 
 # Command
 CMD ["/usr/sbin/sshd", "-D"]
-RUN echo "export LANG=en_US.UTF-8" >> ~/.zshrc
-RUN echo "export LC_ALL=en_US.UTF-8" >> ~/.zshrc
-RUN echo "export LANGUAGE=en_US.UTF-8" >> ~/.zshrc
