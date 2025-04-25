@@ -1,4 +1,4 @@
-FROM nvidia/cuda:12.2.2-devel-ubuntu22.04
+FROM nvidia/cuda:12.4.1-cudnn-devel-ubuntu22.04
 
 ENV HOME /root
 ENV TERM xterm-256color
@@ -16,27 +16,25 @@ RUN apt-get install -y build-essential cmake automake ninja-build libtool
 # Setup OpenSSH
 RUN apt-get install -y openssh-server
 RUN sed -ri 's/^#PasswordAuthentication yes/PasswordAuthentication no/' /etc/ssh/sshd_config
+RUN sed -ri 's/^#PermitRootLogin prohibit-password/PermitRootLogin yes/' /etc/ssh/sshd_config
 RUN sed -ri 's/(^\s+SendEnv.+)/#\1/' /etc/ssh/ssh_config
 RUN mkdir -p $HOME/.ssh && chmod 700 $HOME/.ssh
+
+# Setup for SSH
+RUN mkdir -p /run/sshd
+RUN mkdir -p /var/run/sshd
+EXPOSE 22
 
 # Setup Python
 RUN apt-get install -y python3.10 python3-pip
 RUN python3 --version
 RUN pip3 --version
+RUN pip3 install -U pip
+RUN pip3 install -U setuptools wheel
+RUN pip3 install poetry
 
-# Copy dotfiles
-RUN git clone https://github.com/tatsy/dotfiles $HOME/dotfiles
-RUN rsync -avzP $HOME/dotfiles/.zshrc $HOME/.zshrc
-RUN rsync -avzP $HOME/dotfiles/.vimrc $HOME/.vimrc
-RUN mkdir -p $HOME/.config/nvim && \
-  rsync -avzP $HOME/dotfiles/.config/nvim $HOME/.config/nvim
-
-# Setup zplug
-ENV ZPLUG_HOME $HOME/.zplug
-RUN git clone https://github.com/zplug/zplug $ZPLUG_HOME
-
-# Setup NeoVim
-RUN apt-get install -y gettext
+# Install NeoVim
+RUN apt-get install -y gettext luarocks npm nodejs
 RUN git clone https://github.com/neovim/neovim $HOME/neovim --depth 1
 RUN cd $HOME/neovim && \
   make CMAKE_BUILD_TYPE=RelWithDebInfo && \
@@ -52,7 +50,6 @@ RUN apt-get update
 RUN apt-get install -y code
 
 # Some post setting
-ENTRYPOINT ["/bin/zsh", "-c"]
 RUN chsh -s /bin/zsh
 
 # Set locale
@@ -61,3 +58,22 @@ ENV LANG en_US.UTF-8
 ENV LANGUAGE en_US:en
 ENV LC_ALL en_US.UTF-8
 
+# Copy dotfiles
+RUN git clone https://github.com/tatsy/dotfiles $HOME/dotfiles
+RUN rsync -avzP $HOME/dotfiles/.zshrc $HOME/.zshrc
+RUN rsync -avzP $HOME/dotfiles/.vimrc $HOME/.vimrc
+RUN mkdir -p $HOME/.config/nvim && \
+  rsync -avzP $HOME/dotfiles/.config/nvim/ $HOME/.config/nvim/
+RUN mkdir -p $HOME/.config/fish && \
+  rsync -avzP $HOME/dotfiles/.config/fish/ $HOME/.config/fish/
+
+# Setup zplug
+ENV ZPLUG_HOME $HOME/.zplug
+RUN apt-get install fonts-powerline
+RUN git clone https://github.com/zplug/zplug $ZPLUG_HOME
+
+# Command
+CMD ["/usr/sbin/sshd", "-D"]
+RUN echo "export LANG=en_US.UTF-8" >> ~/.zshrc
+RUN echo "export LC_ALL=en_US.UTF-8" >> ~/.zshrc
+RUN echo "export LANGUAGE=en_US.UTF-8" >> ~/.zshrc
