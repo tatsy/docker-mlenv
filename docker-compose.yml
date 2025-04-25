@@ -1,4 +1,4 @@
-version: "3"
+version: "3.8"
 
 services:
   app:
@@ -14,9 +14,8 @@ services:
     volumes:
       - /data:/data
       - ~/.ssh/docker_rsa.pub:/root/.ssh/authorized_keys
+      - workdir:/root/workdir
     working_dir: /root
-    expose:
-      - 22
     ports:
       - '2222:22'
     tty: true
@@ -28,3 +27,6 @@ services:
               count: all
               capabilities: [gpu]
 
+volumes:
+  workdir:
+    driver: local
