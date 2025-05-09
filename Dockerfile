@@ -4,6 +4,9 @@ ENV HOME /root
 ENV TERM xterm-256color
 SHELL ["/bin/bash", "-c"]
 
+# Timezone
+RUN ln -sf /usr/share/zoneinfo/Asia/Tokyo /etc/localtime
+
 # Update APT
 RUN apt-get update -y
 RUN apt-get upgrade -y
@@ -26,7 +29,10 @@ RUN mkdir -p /var/run/sshd
 EXPOSE 22
 
 # Setup Python
-RUN apt-get install -y python3.10 python3-pip
+RUN apt-get install -y software-properties-common
+RUN apt-add-repository -y ppa:deadsnakes/ppa
+RUN apt-get update -y
+RUN apt-get install -y python3.9-dev python3.10-dev python3.11-dev python3.12-dev python3-pip
 RUN python3 --version
 RUN pip3 --version
 RUN pip3 install -U pip
