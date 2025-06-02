@@ -29,6 +29,8 @@ RUN mkdir -p /var/run/sshd
 EXPOSE 22
 
 # Setup Python
+RUN apt-get update -y
+RUN apt-get upgrade -y
 RUN apt-get install -y software-properties-common
 RUN apt-add-repository -y ppa:deadsnakes/ppa
 RUN apt-get update -y
