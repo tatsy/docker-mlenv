@@ -1,7 +1,6 @@
 services:
   app:
     image: mlenv-app:latest
-    container_name: mlenv
     hostname: docker
     environment:
       - NVIDIA_VISIBLE_DEVICES=all
