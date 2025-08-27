@@ -1,18 +1,18 @@
 services:
   app:
-    image: mlenv-app:latest
+    build: .
+    image: mlenv-app:1.0.0
+    container_name: mlenv-app
+    user: user
     hostname: docker
-    environment:
-      - NVIDIA_VISIBLE_DEVICES=all
-      - NVIDIA_DRIVER_CAPABILITIES=all
+    command: tail -f /dev/null
     volumes:
       - type: bind
         source: /data
         target: /data
       - type: bind
         source: ./dev
-        target: /root/dev
-    working_dir: /root/dev
+        target: /home/user/dev
     deploy:
       resources:
         reservations:
@@ -21,3 +21,6 @@ services:
               count: all
               capabilities: [gpu]
 
+volumes:
+  data:
+  dev:

@@ -17,12 +17,12 @@ RUN apt-get install -y \
     software-properties-common \
     zsh fish git rsync curl wget unzip peco \
     build-essential cmake automake ninja-build libtool \
-    gettext luarocks npm nodejs cargo
+    openssh-server apt-transport-https \
+    gettext luarocks npm nodejs cargo && \
+    rm -rf /var/lib/apt/lists/*
 
 # Setup OpenSSH
-RUN apt-get install -y openssh-server
 RUN sed -ri 's/^#PasswordAuthentication yes/PasswordAuthentication no/' /etc/ssh/sshd_config && \
-    sed -ri 's/^#PermitRootLogin prohibit-password/PermitRootLogin yes/' /etc/ssh/sshd_config && \
     sed -ri 's/(^\s+SendEnv.+)/#\1/' /etc/ssh/ssh_config
 RUN mkdir -p $HOME/.ssh && chmod 700 $HOME/.ssh
 
@@ -40,27 +40,24 @@ RUN apt-add-repository -y ppa:deadsnakes/ppa && \
     python3.11-dev \
     python3.12-dev \
     python3-pip
-
-RUN python3 --version
-RUN pip3 --version
-RUN pip3 install -U pip
-RUN pip3 install -U setuptools wheel
-RUN pip3 install poetry
+RUN pip3 install -U pip setuptools wheel poetry uv
 
 # Install NeoVim
-RUN git clone https://github.com/neovim/neovim $HOME/neovim --depth 1
+RUN git clone --branch stable --depth 1 https://github.com/neovim/neovim $HOME/neovim
 RUN cd $HOME/neovim && \
   make CMAKE_BUILD_TYPE=RelWithDebInfo && \
   make install
 
 # Install Visual Studio Code
-RUN wget -qO- https://packages.microsoft.com/keys/microsoft.asc | gpg --dearmor > packages.microsoft.gpg
-RUN install -D -o root -g root -m 644 packages.microsoft.gpg /etc/apt/keyrings/packages.microsoft.gpg
-RUN echo "deb [arch=amd64,amd64,armhf signed-by=/etc/apt/keyrings/packages.microsoft.gpg] https://packages.microsoft.com/repos/code stable main" | tee /etc/apt/sources.list.d/vscode.list > /dev/null
+RUN wget -qO- https://packages.microsoft.com/keys/microsoft.asc | \
+    gpg --dearmor > packages.microsoft.gpg
+RUN install -D -o root -g root -m 644 packages.microsoft.gpg \
+    /etc/apt/keyrings/packages.microsoft.gpg
+RUN echo "deb [arch=amd64,amd64,armhf signed-by=/etc/apt/keyrings/packages.microsoft.gpg] https://packages.microsoft.com/repos/code stable main" | \
+    tee /etc/apt/sources.list.d/vscode.list > /dev/null
 RUN rm -f packages.microsoft.gpg
-RUN apt-get install apt-transport-https
-RUN apt-get update
-RUN apt-get install -y code
+RUN apt-get update -y && \
+    apt-get install -y code
 
 # Some post setting
 RUN chsh -s /bin/zsh
@@ -71,11 +68,19 @@ ENV LANG=en_US.UTF-8
 ENV LANGUAGE=en_US:en
 ENV LC_ALL=en_US.UTF-8
 
+# Create a user
+RUN apt-get install -y sudo
+RUN useradd -ms /usr/bin/zsh user && \
+    echo "user ALL=(ALL) NOPASSWD:ALL" >> /etc/sudoers
+
+ENV HOME=/home/user
+USER user
+
 # Sheldon
 RUN cargo install sheldon@0.8.0 --locked
 
 # Copy dotfiles
-RUN git clone https://github.com/tatsy/dotfiles $HOME/dotfiles && \
+RUN git clone --depth 1 https://github.com/tatsy/dotfiles $HOME/dotfiles && \
     rsync -avzP $HOME/dotfiles/.zshrc $HOME/.zshrc && \
     rsync -avzP $HOME/dotfiles/.config/ $HOME/.config/ && \
     rsync -avzP $HOME/dotfiles/.vimrc $HOME/.vimrc
@@ -85,4 +90,5 @@ RUN mkdir -p $HOME/.config/fish && \
   rsync -avzP $HOME/dotfiles/.config/fish/ $HOME/.config/fish/
 
 # Command
-CMD ["/usr/sbin/sshd", "-D"]
+WORKDIR /home/user/dev
+CMD ["/usr/bin/zsh", "-c"]
