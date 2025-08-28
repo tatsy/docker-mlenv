@@ -1,6 +1,11 @@
 services:
   app:
-    build: .
+    build:
+      context: .
+      args:
+        USER_ID: ${UID}
+        GROUP_ID: ${GID}
+
     image: mlenv-app:1.0.0
     container_name: mlenv-app
     user: user
@@ -13,6 +18,7 @@ services:
       - type: bind
         source: ./dev
         target: /home/user/dev
+
     deploy:
       resources:
         reservations:

@@ -1,5 +1,7 @@
 FROM nvidia/cuda:12.4.1-cudnn-devel-ubuntu22.04
 
+ARG USER_ID=1000
+ARG GROUP_ID=1000
 ENV HOME=/root
 ENV TERM=xterm-256color
 SHELL ["/bin/bash", "-c"]
@@ -70,14 +72,15 @@ ENV LC_ALL=en_US.UTF-8
 
 # Create a user
 RUN apt-get install -y sudo
-RUN useradd -ms /usr/bin/zsh user && \
+RUN groupadd -g $GROUP_ID user && \
+    useradd -ms /usr/bin/zsh -g $GROUP_ID -u $USER_ID user && \
     echo "user ALL=(ALL) NOPASSWD:ALL" >> /etc/sudoers
 
 ENV HOME=/home/user
 USER user
 
 # Sheldon
-RUN cargo install sheldon@0.8.0 --locked
+RUN cargo install sheldon@0.8.0 starship@1.20.1 --locked
 
 # Copy dotfiles
 RUN git clone --depth 1 https://github.com/tatsy/dotfiles $HOME/dotfiles && \
@@ -85,9 +88,9 @@ RUN git clone --depth 1 https://github.com/tatsy/dotfiles $HOME/dotfiles && \
     rsync -avzP $HOME/dotfiles/.config/ $HOME/.config/ && \
     rsync -avzP $HOME/dotfiles/.vimrc $HOME/.vimrc
 RUN mkdir -p $HOME/.config/nvim && \
-  rsync -avzP $HOME/dotfiles/.config/nvim/ $HOME/.config/nvim/
+    rsync -avzP $HOME/dotfiles/.config/nvim/ $HOME/.config/nvim/
 RUN mkdir -p $HOME/.config/fish && \
-  rsync -avzP $HOME/dotfiles/.config/fish/ $HOME/.config/fish/
+    rsync -avzP $HOME/dotfiles/.config/fish/ $HOME/.config/fish/
 
 # Command
 WORKDIR /home/user/dev
