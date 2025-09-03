@@ -6,8 +6,8 @@ services:
         USER_ID: ${UID}
         GROUP_ID: ${GID}
 
-    image: mlenv-app:1.0.0
-    container_name: mlenv-app-${USERNAME}
+    image: mlenv-app:${COMPOSE_PROJECT_NAME:-default}
+    container_name: mlenv-app-${COMPOSE_PROJECT_NAME:-default}
     user: user
     hostname: docker
     command: tail -f /dev/null
