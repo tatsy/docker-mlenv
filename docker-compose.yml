@@ -7,7 +7,7 @@ services:
         GROUP_ID: ${GID}
 
     image: mlenv-app:1.0.0
-    container_name: mlenv-app
+    container_name: mlenv-app-${USERNAME}
     user: user
     hostname: docker
     command: tail -f /dev/null

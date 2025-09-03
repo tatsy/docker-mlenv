@@ -10,6 +10,7 @@ cd docker-mlenv
 # Please make sure to set the following IDs
 export GID=$(id -g)
 export UID=$(id -u)
+export USERNAME="<your name>"
 
 # Build and run the Docker image
 docker compose build  # Build the Docker image
